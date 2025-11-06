@@ -1,0 +1,19 @@
+#!/bin/sh
+# Husky pre-commit sample: prevent committing .env and run a quick lint
+
+# Prevent a committed .env file
+if git diff --cached --name-only | grep -E "(^|/)\.env($|\.)" >/dev/null; then
+  echo "ERROR: Attempt to commit a .env file. Move secrets to a secrets manager or .env.local and add .env to .gitignore." >&2
+  exit 1
+fi
+
+# Run ESLint on staged JS files (fast check)
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E "\.js$" || true)
+if [ -n "$STAGED" ]; then
+  echo "$STAGED" | xargs ./node_modules/.bin/eslint || {
+    echo "ESLint failed on staged files" >&2
+    exit 1
+  }
+fi
+
+exit 0
